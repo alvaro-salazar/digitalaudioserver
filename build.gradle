@@ -4,6 +4,7 @@ plugins {
   id 'org.javamodularity.moduleplugin' version '1.8.12'
   id 'org.openjfx.javafxplugin' version '0.0.13'
   id 'org.beryx.jlink' version '2.25.0'
+  id 'com.github.johnrengelman.shadow' version '7.1.0'
 }
 
 group 'com.denkitronik'
@@ -26,17 +27,19 @@ tasks.withType(JavaCompile) {
 
 application {
   mainModule = 'com.denkitronik.digitalaudioserver'
-  mainClass = 'com.denkitronik.digitalaudioserver.HelloApplication'
+  mainClass = 'com.denkitronik.digitalaudioserver.AudioServerWithGraph'
 }
 
 javafx {
-  version = '17.0.6'
-  modules = ['javafx.controls', 'javafx.fxml']
+  version = '15'
+  modules = [ 'javafx.controls', 'javafx.graphics', 'javafx.base' ]
 }
 
 dependencies {
-  implementation('org.controlsfx:controlsfx:11.1.2')
-
+  implementation 'org.openjfx:javafx-controls:15'
+  implementation 'org.openjfx:javafx-graphics:15'
+  implementation 'org.openjfx:javafx-base:15'
+  implementation 'org.jfree:jfreechart:1.5.4'
   testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
 }
@@ -54,4 +57,13 @@ jlink {
 
 jlinkZip {
   group = 'distribution'
+}
+
+shadowJar {
+  mergeServiceFiles()
+  dependencies {
+    exclude(dependency('org.openjfx:javafx-controls'))
+    exclude(dependency('org.openjfx:javafx-graphics'))
+    exclude(dependency('org.openjfx:javafx-base'))
+  }
 }
