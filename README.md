@@ -22,18 +22,18 @@
 
 ## Usage
 
-1. Run the following command to build the project:
+   1. Run the following command to build the project:
+   
+```
+./gradlew
+```
+   2. Execute the server application using the following command:
 
-   ```bash
-   ./gradlew build
-   ```
-2. Execute the server application using the following command:
-
-   ```bash
-   ./gradlew run
-   ```
-3. Connect clients that send audio data to the server's IP address and port (default port: 12345).
-4. The server will play back the audio and display the waveform visualization on the GUI.
+```
+./gradlew run
+```
+   3. Connect clients that send audio data to the server's IP address and port (default port: 12345).
+   4. The server will play back the audio and display the waveform visualization on the GUI.
 
 ## Getting Started
 
@@ -43,19 +43,18 @@ Ensure that the JFreeChart library is included in the project's classpath. You c
 
 To build a standalone JAR file, run the following command:
     
-    ```bash
-    ./gradlew jar
-    ```
-
+```
+./gradlew jar
+```
 The JAR file will be located in the `build/libs/` directory.
 
 ## Running the JAR
 
 To run the JAR file, execute the following command:
 
-    ```bash
-    java -jar build/libs/digitalaudioserver-1.0-SNAPSHOT-all.jar
-    ```
+```
+java -jar build/libs/digitalaudioserver-1.0-SNAPSHOT-all.jar
+```
 
 ## License
 
