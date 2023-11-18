@@ -74,14 +74,17 @@ public class AudioServerWithGraph extends JFrame {
     // Data series for the visualizations
     private XYSeries series1;
     private XYSeries series2;
+
     // Dataset for the visualizations
     private XYSeriesCollection dataset = null;
 
-    // Data series for the visualizations
-    private final double DURATION = 1.3;
+    // Time interval for the visualization
+    private final double DURATION = 0.07;
     private final int WIDTH = 150;
 
     // Visualization configuration
+    private int maxAmplitude = 32768;
+    private int minAmplitude = -32768;
     private boolean onePage;
     private double currentTime = 0;
     private int page = 0;
@@ -151,11 +154,12 @@ public class AudioServerWithGraph extends JFrame {
         // Set the axis ranges to fit the data that will be displayed
         xAxis.setRange(0, DURATION);
         xAxis.setTickUnit(new NumberTickUnit((float) DURATION/ 10));
-        yAxis.setRange(-42000, 42000);
-        yAxis.setTickUnit(new NumberTickUnit(4096));
+        yAxis.setRange(minAmplitude, maxAmplitude);
+        yAxis.setTickUnit(new NumberTickUnit((maxAmplitude-minAmplitude)/ 10));
 
         // Set the spline renderer to make the visualization smoother
         XYSplineRenderer renderer = new XYSplineRenderer();
+
         // Set the renderer to not show the markers
         renderer.setSeriesShapesVisible(0, false); // Disable the markers for the series
         plot.setRenderer(renderer); // Set the renderer for the plot
@@ -244,10 +248,12 @@ public class AudioServerWithGraph extends JFrame {
                     }
                     average = 0;
                     currentTime += DURATION / WIDTH; // Increment the current time in the time interval
+                    //double amplitude = 20.0 * Math.log10(1.0 + scaledValue+32768); // Calculate the amplitude in dB
+                    double amplitude = scaledValue; // Calculate the amplitude in units
                     if (page == 0) { // Show the values on the first page
-                        series1.add(currentTime, scaledValue); // Add the value to the visualization
+                        series1.add(currentTime, amplitude); // Add the value to the visualization
                     } else {
-                        series2.add(currentTime, scaledValue); // Add the value to the visualization
+                        series2.add(currentTime, amplitude); // Add the value to the visualization
                     }
                 }
             }
