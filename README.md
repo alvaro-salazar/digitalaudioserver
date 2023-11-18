@@ -15,6 +15,11 @@
 - [JFreeChart Library](https://sourceforge.net/projects/jfreechart/): Used for graphical charting and visualization.
 - [Java Sound API](https://docs.oracle.com/javase/tutorial/sound/index.html): Used for audio playback.
 
+## UI Screenshot
+
+![screenshot](https://github.com/alvaro-salazar/digitalaudioserver/assets/43754402/8f31da3a-bee1-42ba-af22-76353bc03314)
+
+
 ## Usage
 
 1. Run the following command to build the project:
