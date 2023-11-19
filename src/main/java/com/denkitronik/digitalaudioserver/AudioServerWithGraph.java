@@ -62,6 +62,8 @@ import java.net.Socket;
  */
 public class AudioServerWithGraph extends JFrame {
 
+    private static String ip = "localhost";
+    private static int port = 12345;
     // Constants to define the visualization styles
     private final int STYLE_AVG = 0;
     private final int STYLE_AVG_AND_CURRENT = 1;
@@ -94,30 +96,68 @@ public class AudioServerWithGraph extends JFrame {
 
     /**
      * Method that creates the window and displays it.
+     *
      * @param args Command line arguments (not used)
      */
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new AudioServerWithGraph().setVisible(true);
-        });
+        AudioDeviceSimulator audioDeviceSimulator;
+        switch (args.length) {
+            case 0:  // Default mode (server)
+                System.out.println("Starting server mode default mode on port: " + SERVER_PORT);
+                SwingUtilities.invokeLater(() -> {
+                    new AudioServerWithGraph().setVisible(true);
+                });
+                break;
+            case 1: // Client or server mode (server IP and port are not specified)
+                String option = args[0];
+                if (option.equals("client")) {
+                    System.out.println("Starting client default mode. Connecting to server localhost on port: " + SERVER_PORT);
+                    audioDeviceSimulator = new AudioDeviceSimulator();
+                    audioDeviceSimulator.startClient(ip,port);
+                } else if (option.equals("server")) {
+                    System.out.println("Starting server default mode on port: " + SERVER_PORT);
+                    // Create the window and display it
+                    SwingUtilities.invokeLater(() -> {
+                        new AudioServerWithGraph().setVisible(true);
+                    });
+                }
+                break;
+            case 3: // Client mode (server IP and port are specified)
+                System.out.println("Starting client mode. Connecting to server "+ip+" on port: " + port);
+                audioDeviceSimulator = new AudioDeviceSimulator();
+                audioDeviceSimulator.startClient(args[1], Integer.parseInt(args[2]));
+                break;
+            case 4: // Client mode (server IP and port are specified)
+                ip = args[1];
+                port = Integer.parseInt(args[2]);
+                String wavFile = args[3];
+                System.out.println("Starting client mode. Connecting to server "+ip+" on port: " + port+ " with audio file: "+wavFile);
+                audioDeviceSimulator = new AudioDeviceSimulator();
+                audioDeviceSimulator.startClient(args[1], Integer.parseInt(args[2]), args[3]);
+                break;
+            default: // Invalid number of arguments
+                System.out.println("Usage: java -jar AudioServerWithGraph.jar [client|server] [ip] [port]");
+                System.exit(0);
+        }
     }
 
 
     /**
      * Constructor of the class. Creates the window and configures it.
      * It also starts the audio server.
+     *
      * @throws HeadlessException If the window cannot be created
-     * @throws Exception If the audio server cannot be started
+     * @throws Exception         If the audio server cannot be started
      */
     public AudioServerWithGraph() {
         super("Audio Waveform Visualization and Player (Server) by Alvaro Salazar");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         onePage = DURATION >= 1.2;
-        if(DURATION >= 0.5) {
+        if (DURATION >= 0.5) {
             style = STYLE_UNIQUE_VALUE;
-        } else if(DURATION >= 0.1) {
+        } else if (DURATION >= 0.1) {
             style = STYLE_AVG_AND_CURRENT;
-        } else if(DURATION >= 0.05) {
+        } else if (DURATION >= 0.05) {
             style = STYLE_AVG;
         }
         series1 = new XYSeries("Amplitude (units)");
@@ -136,6 +176,7 @@ public class AudioServerWithGraph extends JFrame {
 
     /**
      * Method that creates the waveform visualization chart.
+     *
      * @param dataset Dataset that will be used to create the chart
      * @return The created chart
      */
@@ -153,9 +194,9 @@ public class AudioServerWithGraph extends JFrame {
         NumberAxis yAxis = (NumberAxis) plot.getRangeAxis();
         // Set the axis ranges to fit the data that will be displayed
         xAxis.setRange(0, DURATION);
-        xAxis.setTickUnit(new NumberTickUnit((float) DURATION/ 10));
+        xAxis.setTickUnit(new NumberTickUnit((float) DURATION / 10));
         yAxis.setRange(minAmplitude, maxAmplitude);
-        yAxis.setTickUnit(new NumberTickUnit((maxAmplitude-minAmplitude)/ 10));
+        yAxis.setTickUnit(new NumberTickUnit((maxAmplitude - minAmplitude) / 10));
 
         // Set the spline renderer to make the visualization smoother
         XYSplineRenderer renderer = new XYSplineRenderer();
@@ -170,6 +211,7 @@ public class AudioServerWithGraph extends JFrame {
 
     /**
      * Method that starts the audio server and plays back the received audio.
+     *
      * @throws Exception If the audio server cannot be started
      * @throws Exception If the audio cannot be played back
      * @throws Exception If the waveform visualization cannot be updated
@@ -201,7 +243,7 @@ public class AudioServerWithGraph extends JFrame {
                 }
 
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("Audio streaming finished.");
             }
         }
     }
@@ -209,7 +251,8 @@ public class AudioServerWithGraph extends JFrame {
 
     /**
      * Method that updates the waveform visualization.
-     * @param buffer Buffer with the received audio data
+     *
+     * @param buffer    Buffer with the received audio data
      * @param bytesRead Number of bytes read from the buffer
      */
     private void updateWaveform(byte[] buffer, int bytesRead) {
@@ -277,12 +320,12 @@ public class AudioServerWithGraph extends JFrame {
                 page = 0;                           // Go to the first page
                 currentTime = 0;                    // Reset the current time
             }
-
         });
     }
 
     /**
      * Method that returns the audio format that will be used to play back the received audio.
+     *
      * @return The audio format
      */
     private AudioFormat getAudioFormat() {
