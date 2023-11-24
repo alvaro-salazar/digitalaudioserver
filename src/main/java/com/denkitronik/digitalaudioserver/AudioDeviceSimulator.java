@@ -3,8 +3,11 @@ package com.denkitronik.digitalaudioserver;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.Objects;
 
+/**
+ * This class simulates an audio device that sends audio data to the server.
+ * It can be used to test the server without having an actual audio device.
+ */
 public class AudioDeviceSimulator {
     private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 12345;
@@ -15,13 +18,10 @@ public class AudioDeviceSimulator {
      *
      * @param ip   IP address of the server
      * @param port TCP port of the server
-     * @return 0 if the connection was successful, -1 otherwise
      */
-    public int startClient(String ip, int port) {
+    public void startClient(String ip, int port) {
         try (Socket socket = new Socket(ip == null ? "localhost" : null, port)) {
             System.out.println("Starting client connection to the server" + ip + " on port " + port + "...");
-            int angulo = 270;
-            double amp = Math.sin(angulo * Math.PI / 180);
 
             OutputStream outputStream = socket.getOutputStream();
 
@@ -32,19 +32,24 @@ public class AudioDeviceSimulator {
             double duration = 20.0;     // Duration in seconds
 
             for (int i = 0; i < sampleRate * duration; i++) {
-                byte[] byteValue = getBytes(i, (double) sampleRate, frequency);
+                byte[] byteValue = getBytes(i, sampleRate, frequency);
                 outputStream.write(byteValue);
             }
 
             System.out.println("Sound streaming simulation finished.");
-            return 0;
         } catch (IOException e) {
             System.out.println("Server connection finished.");
-            return -1;
         }
     }
 
-    private static byte[] getBytes(int i, double sampleRate, double frequency) {
+    /**
+     * Returns the 16-bit PCM sample of the sin wave at the specified index.
+     * @param i         Sample index
+     * @param sampleRate Sampling frequency in Hz
+     * @param frequency Wave frequency in Hz
+     * @return 16-bit PCM sample
+     */
+    static byte[] getBytes(int i, double sampleRate, double frequency) {
         double t = i / sampleRate;             // Time in seconds
         double amplitude = Math.sin(2.0 * Math.PI * frequency * t);
 
@@ -57,7 +62,7 @@ public class AudioDeviceSimulator {
         // Convert to 16-bit pcm sound array, little endian byte order
         return new byte[]{
                 (byte) (data & 0xff),        // Low byte
-                (byte) (data >>> 8)          // High byte
+                (byte) ((data >> 8)&0xff)    // High byte
         };
     }
 
@@ -71,16 +76,16 @@ public class AudioDeviceSimulator {
      */
     public void startClient(String ip, int port, String wavFile) {
         try (Socket socket = new Socket(ip==null?SERVER_HOST:ip, port==0?SERVER_PORT:port); // Use localhost if no ip is specified
-             FileInputStream fileInputStream = new FileInputStream(wavFile); // Read the wav file
+             FileInputStream fileInputStream = new FileInputStream(wavFile) // Read the wav file
         ){
             BufferedOutputStream outputStream = new BufferedOutputStream(socket.getOutputStream()); // Get the output stream to the server
             System.out.println("Server connection started.");
 
             // Read and send the WAV file header (first 44 bytes)
             byte[] header = new byte[44]; // Header size is 44 bytes
-            if (fileInputStream.read(header) != -1) { // Read until EOF
-                //outputStream.write(header); // Uncomment this line if you want to send the header to the server
-            }
+            //noinspection ResultOfMethodCallIgnored
+            fileInputStream.read(header);// Read until EOF
+            //outputStream.write(header); // Uncomment this line if you want to send the header to the server
 
             System.out.println("Initializing audio streaming (sampling freq: 44100, 16 bit, mono, little endian, wave file: "+wavFile+")");
             // Read and send the WAV file stream

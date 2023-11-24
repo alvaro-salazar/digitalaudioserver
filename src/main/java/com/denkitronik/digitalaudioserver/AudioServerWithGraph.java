@@ -57,7 +57,7 @@ import java.net.Socket;
  * - Connect clients that send audio data to the server's IP address and port (default port: 12345).
  * - The server will play back the audio and display the waveform visualization.
  * Dependencies:
- * - JFreeChart library for graphical charting (https://sourceforge.net/projects/jfreechart/)
+ * - JFreeChart library for graphical charting (<a href="https://sourceforge.net/projects/jfreechart/">...</a>)
  * Note: Ensure that the JFreeChart library is included in the project's classpath.
  */
 public class AudioServerWithGraph extends JFrame {
@@ -74,25 +74,22 @@ public class AudioServerWithGraph extends JFrame {
     private static final int SERVER_PORT = 12345;
 
     // Data series for the visualizations
-    private XYSeries series1;
-    private XYSeries series2;
+    private final XYSeries series1;
+    private final XYSeries series2;
 
     // Dataset for the visualizations
-    private XYSeriesCollection dataset = null;
+    private final XYSeriesCollection dataset;
 
     // Time interval for the visualization
     private final double DURATION = 0.07;
     private final int WIDTH = 150;
 
-    // Visualization configuration
-    private int maxAmplitude = 32768;
-    private int minAmplitude = -32768;
-    private boolean onePage;
+    private final boolean onePage;
     private double currentTime = 0;
     private int page = 0;
     private int indexAvg = 0;
     private int average = 0;
-    private int style;
+    private final int style;
 
     /**
      * Method that creates the window and displays it.
@@ -101,15 +98,14 @@ public class AudioServerWithGraph extends JFrame {
      */
     public static void main(String[] args) {
         AudioDeviceSimulator audioDeviceSimulator;
+        String option;
         switch (args.length) {
             case 0:  // Default mode (server)
                 System.out.println("Starting server mode default mode on port: " + SERVER_PORT);
-                SwingUtilities.invokeLater(() -> {
-                    new AudioServerWithGraph().setVisible(true);
-                });
+                SwingUtilities.invokeLater(() -> new AudioServerWithGraph().setVisible(true));
                 break;
             case 1: // Client or server mode (server IP and port are not specified)
-                String option = args[0];
+                option = args[0];
                 if (option.equals("client")) {
                     System.out.println("Starting client default mode. Connecting to server localhost on port: " + SERVER_PORT);
                     audioDeviceSimulator = new AudioDeviceSimulator();
@@ -117,15 +113,39 @@ public class AudioServerWithGraph extends JFrame {
                 } else if (option.equals("server")) {
                     System.out.println("Starting server default mode on port: " + SERVER_PORT);
                     // Create the window and display it
-                    SwingUtilities.invokeLater(() -> {
-                        new AudioServerWithGraph().setVisible(true);
-                    });
+                    SwingUtilities.invokeLater(() -> new AudioServerWithGraph().setVisible(true));
                 }
                 break;
-            case 3: // Client mode (server IP and port are specified)
-                System.out.println("Starting client mode. Connecting to server "+ip+" on port: " + port);
-                audioDeviceSimulator = new AudioDeviceSimulator();
-                audioDeviceSimulator.startClient(args[1], Integer.parseInt(args[2]));
+
+            case 2: // Client with ip server and port specified or server with port specified
+                option = args[0];
+                if (option.equals("client")) {
+                    System.out.println("Number of arguments is not valid for client mode.");
+                    System.out.println("Starting client default mode. Connecting to server localhost on port: " + SERVER_PORT);
+                    audioDeviceSimulator = new AudioDeviceSimulator();
+                    ip= "localhost";
+                    port = 12345;
+                    audioDeviceSimulator.startClient(ip,port); // Default server IP and port
+                } else if (option.equals("server")) {
+                    System.out.println("Starting server default mode on port: " + args[1]);
+                    port = Integer.parseInt(args[1]);
+                    // Create the window and display it
+                    SwingUtilities.invokeLater(() -> new AudioServerWithGraph().setVisible(true));
+                }
+                break;
+
+            case 3: // Client with ip server and port specified or server with port specified
+                option = args[0];
+                if (option.equals("client")) { // Client mode (server IP and port are specified)
+                    System.out.println("Starting client mode. Connecting to server "+ip+" on port: " + port);
+                    audioDeviceSimulator = new AudioDeviceSimulator();
+                    audioDeviceSimulator.startClient(args[1], Integer.parseInt(args[2]));
+                } else if (option.equals("server")) {
+                    System.out.println("Number of arguments is not valid for server mode. Starting server default mode on port: " + SERVER_PORT);
+                    System.out.println("Starting server default mode on port: " + SERVER_PORT);
+                    // Create the window and display it
+                    SwingUtilities.invokeLater(() -> new AudioServerWithGraph().setVisible(true));
+                }
                 break;
             case 4: // Client mode (server IP and port are specified)
                 ip = args[1];
@@ -147,8 +167,8 @@ public class AudioServerWithGraph extends JFrame {
      * It also starts the audio server.
      *
      * @throws HeadlessException If the window cannot be created
-     * @throws Exception         If the audio server cannot be started
      */
+    @SuppressWarnings("ConstantValue")
     public AudioServerWithGraph() {
         super("Audio Waveform Visualization and Player (Server) by Alvaro Salazar");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -195,8 +215,11 @@ public class AudioServerWithGraph extends JFrame {
         // Set the axis ranges to fit the data that will be displayed
         xAxis.setRange(0, DURATION);
         xAxis.setTickUnit(new NumberTickUnit((float) DURATION / 10));
+        // Visualization configuration
+        int maxAmplitude = 32768;
+        int minAmplitude = -32768;
         yAxis.setRange(minAmplitude, maxAmplitude);
-        yAxis.setTickUnit(new NumberTickUnit((maxAmplitude - minAmplitude) / 10));
+        yAxis.setTickUnit(new NumberTickUnit((double) (maxAmplitude - minAmplitude) / 10));
 
         // Set the spline renderer to make the visualization smoother
         XYSplineRenderer renderer = new XYSplineRenderer();
@@ -212,9 +235,6 @@ public class AudioServerWithGraph extends JFrame {
     /**
      * Method that starts the audio server and plays back the received audio.
      *
-     * @throws Exception If the audio server cannot be started
-     * @throws Exception If the audio cannot be played back
-     * @throws Exception If the waveform visualization cannot be updated
      */
     private void startAudioStream() {
         while (true) {
